@@ -29,7 +29,7 @@ and replace it with your corret folder name, like
 > dirBase<-"/home/smith/yourFolder"
 
 Then you can run :
-> Rscript bin/bimodalityDetection.R
+> Rscript Bimodality_Genes/bin/bimodalityDetection.R
 
 ### R dependencies
 
