@@ -15,7 +15,7 @@ rm(list=ls(all=TRUE))
 
 #File location ----
 #Did you change it to your base location?
-dirBase<-"Place here the correct name of yourFolder"
+dirBase<-"Place here the correct name of your work folder"
 
 #figures
 dirFig<-paste0(dirBase,"figures/")
