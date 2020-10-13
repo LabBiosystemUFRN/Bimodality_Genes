@@ -16,7 +16,9 @@ The script unpack.sh reassmeble and stract the data
 ###  Our pipeline  
 To run our pipeline, download our files from [github](https://github.com/LabBiosystemUFRN/Bimodality_Genes) 
 > mkdir yourFolder
+
 > cd yourFolder
+
 > git clone https://github.com/LabBiosystemUFRN/Bimodality_Genes
 
 Then open the file yourFolber/bin/bimodalityDetection.R, locate the line
