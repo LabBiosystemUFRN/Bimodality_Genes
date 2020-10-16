@@ -30,12 +30,12 @@ parallelMode = T
 dirBase<-"Place here the correct name of your work folder"
 
 #figures
-dirFig<-paste0(dirBase,"figures/")
+dirFig<-file.path(dirBase,"figures/")
 #bin dir
-binDir<-paste0(dirBase,"bin/")
+binDir<-file.path(dirBase,"bin/")
 
 
-source(paste0(binDir,"allFunctions.R"))
+source(file.path(binDir,"allFunctions.R"))
 
 loadDependencies()
 unpack(dirBase)
@@ -67,7 +67,7 @@ for(i in 1:length(vfileName)){
   fileName<-vfileName[i]
   cat("Processing",tipo,fileName,"\n")
 
-  dirFigAtu = paste0(dirFig,tipo,"/")
+  dirFigAtu = file.path(dirFig,tipo,"/")
   
   if(parallelMode){
     processaPar(dirBase = dirBase, 

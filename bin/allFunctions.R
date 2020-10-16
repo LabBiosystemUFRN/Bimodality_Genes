@@ -1,38 +1,35 @@
 #install required packages #
 loadDependencies <- function(){
-  if (!require("bnlearn")) {
+  if (!require("bnlearn", repos = "http://cran.us.r-project.org")) {
     install.packages("bnlearn")
   }
-  # if (!require("modes")) {
-  #   install.packages("modes")
-  # }
   if (!require("signal")) {
-    install.packages("signal")
+    install.packages("signal", repos = "http://cran.us.r-project.org")
   }
   if (!require("ggplot2")) {
-    install.packages("ggplot2")
+    install.packages("ggplot2", repos = "http://cran.us.r-project.org")
   }
   if (!require("mclust")) {
-    install.packages("mclust")
+    install.packages("mclust", repos = "http://cran.us.r-project.org")
   }
   if (!require("gridExtra")) {
-    install.packages("gridExtra")
+    install.packages("gridExtra", repos = "http://cran.us.r-project.org")
   }
   if (!require("grid")) {
-    install.packages("grid")
+    install.packages("grid", repos = "http://cran.us.r-project.org")
   }
   if (!require("lattice")) {
-    install.packages("lattice")
+    install.packages("lattice", repos = "http://cran.us.r-project.org")
   }
   if (!require("cowplot")) {
-    install.packages("cowplot")
+    install.packages("cowplot", repos = "http://cran.us.r-project.org")
   }
   if (!require("reshape2")) {
-    install.packages("reshape2")
+    install.packages("reshape2", repos = "http://cran.us.r-project.org")
   }
   
   if (!require("doParallel")) {
-    install.packages("doParallel")
+    install.packages("doParallel", repos = "http://cran.us.r-project.org")
   }
   
 }
@@ -41,7 +38,7 @@ loadDependencies <- function(){
 #unpack data
 unpack<- function(dirBase){
   
-  exec<-paste0(dirBase,"bin/unpack.sh")
+  exec<-file.path(dirBase,"bin/unpack.sh")
   command<-paste0(exec," ",dirBase)
   system(command)
   
@@ -414,7 +411,7 @@ printGraf<-function(dirFig,
   library(cowplot)
   gFinal <- plot_grid(g[[1]], g[[2]],g[[3]], ncol=1,  align = "v")
 
-  ggsave(filename = paste0(dirFig,"/",gene,".pdf"),
+  ggsave(filename = file.path(dirFig,"/",gene,".pdf"),
          plot = gFinal,
          device = "pdf",
          width = 11,height = 8,
@@ -505,14 +502,14 @@ processa = function(dirBase,
                     tipo,
                     fileName){
   #Create folder for figures
-  dirFigFake<-paste0(dirFig,"fake/")
+  dirFigFake<-file.path(dirFig,"fake/")
   if (!dir.exists(dirFig)){
     dir.create(dirFig)
     dir.create(dirFigFake)
   }
   #Create folder for samples
-  dirSamples<-paste0(dirBase,"/samples/",tipo,"/")
-  dirSamplesFake<-paste0(dirSamples,"fake/")
+  dirSamples<-file.path(dirBase,"/samples/",tipo,"/")
+  dirSamplesFake<-file.path(dirSamples,"fake/")
   if (!dir.exists(dirSamples)){
     dir.create(dirSamples)
     dir.create(dirSamplesFake)
@@ -522,7 +519,7 @@ processa = function(dirBase,
   #realiza o processamento propriamente dito
   
   #Open the log file
-  arqLog<-paste0(dirBase,
+  arqLog<-file.path(dirBase,
                  "log/",
                  tipo,
                  format(Sys.time(), "%X_%Y_%m_%d"),
@@ -533,7 +530,7 @@ processa = function(dirBase,
   erros <- data.frame(matrix(ncol = 1, nrow = 0))
   dfTmp <- data.frame(matrix(ncol = 2, nrow = 0))
   
-  dirDados<-paste0(dirBase,"data/")
+  dirDados<-file.path(dirBase,"data/")
   
   
   #Read the data file
@@ -805,14 +802,14 @@ processaPar = function(dirBase,
                     tipo,
                     fileName){
   #Create folder for figures
-  dirFigFake<-paste0(dirFig,"fake/")
+  dirFigFake<-file.path(dirFig,"fake/")
   if (!dir.exists(dirFig)){
     dir.create(dirFig)
     dir.create(dirFigFake)
   }
   #Create folder for samples
-  dirSamples<-paste0(dirBase,"/samples/",tipo,"/")
-  dirSamplesFake<-paste0(dirSamples,"fake/")
+  dirSamples<-file.path(dirBase,"/samples/",tipo,"/")
+  dirSamplesFake<-file.path(dirSamples,"fake/")
   if (!dir.exists(dirSamples)){
     dir.create(dirSamples)
     dir.create(dirSamplesFake)
@@ -822,7 +819,7 @@ processaPar = function(dirBase,
   #realiza o processamento propriamente dito
   
   #Open the log file
-  arqLog<-paste0(dirBase,
+  arqLog<-file.path(dirBase,
                  "log/",
                  tipo,
                  format(Sys.time(), "%X_%Y_%m_%d"),
@@ -833,7 +830,7 @@ processaPar = function(dirBase,
   erros <- data.frame(matrix(ncol = 1, nrow = 0))
   dfTmp <- data.frame(matrix(ncol = 2, nrow = 0))
   
-  dirDados<-paste0(dirBase,"data/")
+  dirDados<-file.path(dirBase,"data/")
   
   
   #Read the data file
