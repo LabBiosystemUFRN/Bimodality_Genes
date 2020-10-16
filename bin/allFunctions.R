@@ -1,4 +1,4 @@
-#install required packages 
+#install required packages #
 loadDependencies <- function(){
   if (!require("bnlearn")) {
     install.packages("bnlearn")
