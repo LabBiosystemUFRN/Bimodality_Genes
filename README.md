@@ -28,6 +28,10 @@ and replace it with your corret folder name, like
 
 > dirBase<-"/home/smith/yourFolder"
 
+By default, the script will run in parallel mode. If you have memory troubles using this mode, please, change the following line in the script
+
+> parallelMode = F
+
 Then you can run :
 > Rscript Bimodality_Genes/bin/bimodalityDetection.R
 
