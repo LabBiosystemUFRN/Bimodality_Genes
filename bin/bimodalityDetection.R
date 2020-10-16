@@ -27,7 +27,7 @@ parallelMode = T
 
 #File location ----
 #Did you change it to your base location?
-dirBase<-"/home/clovis/Doutorado/Projetos/Bimodalidade/tste2/Bimodality_Genes/"
+dirBase<-"Place here the correct name of your work folder"
 
 #figures
 dirFig<-paste0(dirBase,"figures/")
