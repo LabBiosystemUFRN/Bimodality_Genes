@@ -9,6 +9,14 @@
 #   It's released under GPL v2.
 #*************************************************
 
+#*************************************************
+# Updated in 16/10/2020
+#   Parallel mode
+#   New graphics
+#   Filter for low samples clusters
+#   cluster classification by N
+#*************************************************
+
 
 #Clean all variables ----
 rm(list=ls(all=TRUE))
