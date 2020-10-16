@@ -13,9 +13,13 @@
 #Clean all variables ----
 rm(list=ls(all=TRUE))
 
+#Are you having trouble using parallel processing?
+#Set parallelMode = F
+parallelMode = T
+
 #File location ----
 #Did you change it to your base location?
-dirBase<-"Place here the correct name of your work folder"
+dirBase<-"/home/clovis/Doutorado/Projetos/Bimodalidade/tste2/Bimodality_Genes/"
 
 #figures
 dirFig<-paste0(dirBase,"figures/")
@@ -57,13 +61,23 @@ for(i in 1:length(vfileName)){
 
   dirFigAtu = paste0(dirFig,tipo,"/")
   
-  
-  processa(dirBase = dirBase, 
+  if(parallelMode){
+    processaPar(dirBase = dirBase, 
+             dirFig = dirFigAtu, 
+             atenuacao = atenuacao,
+             minExpression = minExpression, 
+             tipo = tipo,
+             fileName=fileName)
+    
+  }else{
+    processa(dirBase = dirBase, 
            dirFig = dirFigAtu, 
            atenuacao = atenuacao,
            minExpression = minExpression, 
            tipo = tipo,
            fileName=fileName)
+  }
   
 }
 
+#dirFig = dirFigAtu
