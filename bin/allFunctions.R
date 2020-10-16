@@ -1,7 +1,7 @@
 #install required packages #
 loadDependencies <- function(){
-  if (!require("bnlearn", repos = "http://cran.us.r-project.org")) {
-    install.packages("bnlearn")
+  if (!require("bnlearn")) {
+    install.packages("bnlearn", repos = "http://cran.us.r-project.org")
   }
   if (!require("signal")) {
     install.packages("signal", repos = "http://cran.us.r-project.org")
@@ -38,7 +38,7 @@ loadDependencies <- function(){
 #unpack data
 unpack<- function(dirBase){
   
-  exec<-file.path(dirBase,"bin/unpack.sh")
+  exec<-paste0(dirBase,"bin/unpack.sh")
   command<-paste0(exec," ",dirBase)
   system(command)
   
@@ -411,7 +411,7 @@ printGraf<-function(dirFig,
   library(cowplot)
   gFinal <- plot_grid(g[[1]], g[[2]],g[[3]], ncol=1,  align = "v")
 
-  ggsave(filename = file.path(dirFig,"/",gene,".pdf"),
+  ggsave(filename = paste0(dirFig,"/",gene,".pdf"),
          plot = gFinal,
          device = "pdf",
          width = 11,height = 8,
@@ -502,14 +502,14 @@ processa = function(dirBase,
                     tipo,
                     fileName){
   #Create folder for figures
-  dirFigFake<-file.path(dirFig,"fake/")
+  dirFigFake<-paste0(dirFig,"fake/")
   if (!dir.exists(dirFig)){
     dir.create(dirFig)
     dir.create(dirFigFake)
   }
   #Create folder for samples
-  dirSamples<-file.path(dirBase,"/samples/",tipo,"/")
-  dirSamplesFake<-file.path(dirSamples,"fake/")
+  dirSamples<-paste0(dirBase,"/samples/",tipo,"/")
+  dirSamplesFake<-paste0(dirSamples,"fake/")
   if (!dir.exists(dirSamples)){
     dir.create(dirSamples)
     dir.create(dirSamplesFake)
@@ -519,7 +519,7 @@ processa = function(dirBase,
   #realiza o processamento propriamente dito
   
   #Open the log file
-  arqLog<-file.path(dirBase,
+  arqLog<-paste0(dirBase,
                  "log/",
                  tipo,
                  format(Sys.time(), "%X_%Y_%m_%d"),
@@ -530,7 +530,7 @@ processa = function(dirBase,
   erros <- data.frame(matrix(ncol = 1, nrow = 0))
   dfTmp <- data.frame(matrix(ncol = 2, nrow = 0))
   
-  dirDados<-file.path(dirBase,"data/")
+  dirDados<-paste0(dirBase,"data/")
   
   
   #Read the data file
@@ -802,14 +802,14 @@ processaPar = function(dirBase,
                     tipo,
                     fileName){
   #Create folder for figures
-  dirFigFake<-file.path(dirFig,"fake/")
+  dirFigFake<-paste0(dirFig,"fake/")
   if (!dir.exists(dirFig)){
     dir.create(dirFig)
     dir.create(dirFigFake)
   }
   #Create folder for samples
-  dirSamples<-file.path(dirBase,"/samples/",tipo,"/")
-  dirSamplesFake<-file.path(dirSamples,"fake/")
+  dirSamples<-paste0(dirBase,"/samples/",tipo,"/")
+  dirSamplesFake<-paste0(dirSamples,"fake/")
   if (!dir.exists(dirSamples)){
     dir.create(dirSamples)
     dir.create(dirSamplesFake)
@@ -819,7 +819,7 @@ processaPar = function(dirBase,
   #realiza o processamento propriamente dito
   
   #Open the log file
-  arqLog<-file.path(dirBase,
+  arqLog<-paste0(dirBase,
                  "log/",
                  tipo,
                  format(Sys.time(), "%X_%Y_%m_%d"),
@@ -830,7 +830,7 @@ processaPar = function(dirBase,
   erros <- data.frame(matrix(ncol = 1, nrow = 0))
   dfTmp <- data.frame(matrix(ncol = 2, nrow = 0))
   
-  dirDados<-file.path(dirBase,"data/")
+  dirDados<-paste0(dirBase,"data/")
   
   
   #Read the data file

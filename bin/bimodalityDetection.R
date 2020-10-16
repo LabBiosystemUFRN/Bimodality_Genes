@@ -67,7 +67,7 @@ for(i in 1:length(vfileName)){
   fileName<-vfileName[i]
   cat("Processing",tipo,fileName,"\n")
 
-  dirFigAtu = file.path(dirFig,tipo,"/")
+  dirFigAtu = paste0(dirFig,tipo,"/")
   
   if(parallelMode){
     processaPar(dirBase = dirBase, 
