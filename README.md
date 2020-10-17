@@ -10,7 +10,9 @@ The *data_files*  folder contains data from 522 patients with a primary tumor of
 
 The original data is splited in two files: KIRC_FPKM_TP.tsv.tar.bz.part.aa and KIRC_FPKM_TP.tsv.tar.bz.part.ab
 
-The script unpack.sh reassemble and extract the data
+The script unpack.sh reassemble and extract the data. If your need to process a data file without compactation, comment the line
+
+> # unpack(dirBase)
 
 If you want to process another dataset, it must be placed inside the folder data, and the file must have the following structure, separated by tabs:
 
