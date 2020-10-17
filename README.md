@@ -12,7 +12,7 @@ The original data is splited in two files: KIRC_FPKM_TP.tsv.tar.bz.part.aa and K
 
 The script unpack.sh reassemble and extract the data. If your need to process a data file without compactation, comment the line
 
-> # unpack(dirBase)
+> \# unpack(dirBase)
 
 If you want to process another dataset, it must be placed inside the folder data, and the file must have the following structure, separated by tabs:
 
