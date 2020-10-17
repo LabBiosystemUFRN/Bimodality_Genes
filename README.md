@@ -41,6 +41,8 @@ Below you can see an example of the expression file format accepted by the algor
 "TCGA-66-2783"	|	"LINC00636"	|	0
 "TCGA-66-2783"	|	"PIGV"	|	8.14476960589
 
+You can process more than one file per run. 
+
 Then edit **_bimodalityDetection.R_** placing your file list and alias, as shown below:
 
 ``` #Sample identification
