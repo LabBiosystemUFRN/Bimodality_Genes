@@ -43,23 +43,23 @@ Below you can see an example of the expression file format accepted by the algor
 
 Then edit **_bimodalityDetection.R_** placing your file list and alias, as shown below:
 
-``` \#Sample identification
+``` #Sample identification
 
-\#You can use more than one sample if necessary
+#You can use more than one sample if necessary
 
-\#It will be processed in the appearance order
+#It will be processed in the appearance order
 
-vtipo<-c("LUSC",
+vtipo<-c("ALIAS1",
 
-        "LUSC2")
+        "ALIAS2")
 
-\#Sample file name
+#Sample file name
 
-\#Must be in the same order above
+#Must be in the same order above
 
-vfileName<-c("LUSC.tsv",
+vfileName<-c("FILE1.tsv",
 
-            "LUSC_FPKM1.tsv") 
+            "FILE2.tsv") 
 ```
 
 <a name="any"></a>
