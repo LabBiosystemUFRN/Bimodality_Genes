@@ -12,6 +12,33 @@ The original data is splited in two files: KIRC_FPKM_TP.tsv.tar.bz.part.aa and K
 
 The script unpack.sh reassemble and extract the data
 
+If you want to process another dataset, it must be placed inside the folder data, and the file must have the following structure, separated by tabs:
+
+* sample - with the sample identifier. The final output files will use this identifier to list what samples belong to each cluster;
+
+* symbol - with the gene identifier, usually the gene symbol gene. It will be used to report bimodal genes;
+
+* FPKM - with the values ​​of expression.
+
+Below you can see an example of the expression file format accepted by the algorithm:
+
+"sample"	|	"symbol"	|	"FPKM"
+--------	|	--------	|	--------
+"TCGA-66-2783"	|	"LINC02082"	|	0
+"TCGA-66-2783"	|	"RAB4B"	|	2.44648524683
+"TCGA-66-2783"	|	"TIGAR"	|	3.01211011845
+"TCGA-66-2783"	|	"RNF44"	|	24.7499170861
+"TCGA-66-2783"	|	"DNAH3"	|	0.809002751355
+"TCGA-66-2783"	|	"RPL23A"	|	80.0582471777
+"TCGA-66-2783"	|	"ARL8B"	|	44.5540484135
+"TCGA-66-2783"	|	"CALB2"	|	10.2637161003
+"TCGA-66-2783"	|	"MFSD3"	|	4.88189970348
+"TCGA-66-2783"	|	"LINC00636"	|	0
+"TCGA-66-2783"	|	"PIGV"	|	8.14476960589
+
+
+
+
 <a name="any"></a>
 ###  Our pipeline  
 To run our pipeline, download our files from [github](https://github.com/LabBiosystemUFRN/Bimodality_Genes) 
