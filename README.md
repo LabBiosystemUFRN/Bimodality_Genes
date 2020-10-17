@@ -21,7 +21,7 @@ Your file must be placed inside the folder named **_data_**, and the file must h
 
 * sample - with the sample identifier. The final output files will use this identifier to list what samples belong to each cluster;
 
-* symbol - with the gene identifier, usually the gene symbol gene. It will be used to report bimodal genes;
+* symbol - with the gene identifier, usually the gene symbol. It will be used to report bimodal genes;
 
 * FPKM - with the values ​​of expression.
 
@@ -41,8 +41,25 @@ Below you can see an example of the expression file format accepted by the algor
 "TCGA-66-2783"	|	"LINC00636"	|	0
 "TCGA-66-2783"	|	"PIGV"	|	8.14476960589
 
+Then edit **_bimodalityDetection.R_** placing your file list and alias, as shown below:
 
+``` \#Sample identification
 
+\#You can use more than one sample if necessary
+
+\#It will be processed in the appearance order
+
+vtipo<-c("LUSC",
+
+        "LUSC2")
+
+\#Sample file name
+
+\#Must be in the same order above
+
+vfileName<-c("LUSC.tsv",
+
+            "LUSC_FPKM1.tsv") ```
 
 <a name="any"></a>
 ###  Our pipeline  
@@ -53,7 +70,7 @@ To run our pipeline, download our files from [github](https://github.com/LabBios
 
 > git clone https://github.com/LabBiosystemUFRN/Bimodality_Genes
 
-Then open the file yourFolber/bin/bimodalityDetection.R, locate the line
+Then open the file **_yourFolber/bin/bimodalityDetection.R_**, locate the line
 > dirBase<-"Place here the correct name of yourFolder"
 
 and replace it with your corret folder name, like
