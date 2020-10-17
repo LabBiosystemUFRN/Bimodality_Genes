@@ -73,15 +73,6 @@ aplicaTH= function (densidade, picos, limiarUp, limiarDw, arqLog, gene){
   #df temporario juntando tabela original e picos
   tmp <- merge(densidade,picos, by= 1)
   colnames(tmp)<- c("x","y","tipo")
-  #elimina valores menores que limiarDw do sinal
-  tmp <- tmp[tmp$y > limiarDw,]
-  #erro se tmp ficar vazio
-  if(nrow(tmp)<=1){
-    cat(paste("No peak and valley to be processed... ",gene,"\n"),file=arqLog, append = T)
-    #print("Erro: ")
-    colnames(resultado)<-c("x","y","tipo")
-    return(resultado)
-  }
   
   #acrescenta o primeiro vale, caso este não exista
   if(tmp$tipo[1] == 1){
@@ -92,15 +83,36 @@ aplicaTH= function (densidade, picos, limiarUp, limiarDw, arqLog, gene){
     tmp<-rbind(tmp,c(1,0,-1))
   }
   #verifica se existe alternancia entre picos e vales
+  i=5
   for(i in seq(1,nrow(tmp)-1,2)){
     #primeiro vale depois pico
     if(tmp$tipo[i]== 1 | tmp$tipo[i+1] == -1 ){
       cat(paste("Number of peaks and valleys doesn't match... ",gene,"\n"),file=arqLog, append = T)
       #      print("Erro: ")
       colnames(resultado)<-c("x","y","tipo")
-      return(resultado)
+     return(resultado)
     }
   }
+  
+  #elimina picos menores que limiarDw do sinal
+  # eliminando o vale subsequente tb
+  tmp2<-tmp[1,]
+  i=2
+  #testa somente picos
+  for(i in seq(from=2,to=nrow(tmp),by=2)){
+    if(tmp$y[i] > limiarDw){
+      tmp2<-rbind(tmp2,tmp[i:(i+1),])  
+    }    
+  }
+  #tmp <- tmp[tmp$y > limiarDw,]
+  #erro se tmp ficar vazio
+  if(nrow(tmp)<=1){
+    cat(paste("No peak and valley to be processed... ",gene,"\n"),file=arqLog, append = T)
+    #print("Erro: ")
+    colnames(resultado)<-c("x","y","tipo")
+    return(resultado)
+  }
+  
   #retorna sempre o primerio vale
   resultado <- data.frame(tmp[1,])
   
@@ -121,12 +133,14 @@ aplicaTH= function (densidade, picos, limiarUp, limiarDw, arqLog, gene){
 }
 
 #locates all peaks
-achaPico = function (derivada){
+achaPico = function (derivadaS){
   #compara os sinais da derivada. Havendo diferença houve inflexão no gráfico
-  sinal<- sign(derivada$y)
+  sinal<- sign(derivadaS$y)
+  sinal<-sinal[sinal!=0]
   #variavel de resultado
   resultado<-data.frame(matrix(ncol = 2, nrow = 0))
-  tmp<-data.frame(matrix(ncol = 2, nrow = 1))
+  tmp<-data.frame(X1=0.0,X2=0.0)
+  i=142
   for(i in seq(1,length(sinal)-1,1)){
     if(sinal[i] != sinal[i+1]){
       #em tipo picos recebem 1, vales recebem -1
@@ -135,7 +149,7 @@ achaPico = function (derivada){
       }else{
         tmp[1,2]<- -1
       }
-      tmp[1,1]<-derivada$x[i]
+      tmp[1,1]<-derivadaS$x[i]
       
       resultado<- rbind(resultado,tmp)
     }
@@ -281,7 +295,7 @@ intervalo <- function(densidade, amostras,
   continuid$Var1<-NULL
   continuid<-continuid[continuid$Freq >1,]
   if(nrow(continuid)>0){
-    i="3"
+    i="4"
     for(i in unique(continuid$Var2)){
       tmp<-fragm[fragm$cluster == i,]
       #Apenas a ultima linha contendo o maior numero de amostras
@@ -290,7 +304,7 @@ intervalo <- function(densidade, amostras,
       tmp<-tmp[-lastLin,]
       #transfere para cluster picos +2 (inutil) todos os descontínuos
       for (j  in 1:nrow(tmp)) {
-        clusteres$cluster[tmp$inicio:tmp$fim]<-qtdPicos+2
+        clusteres$cluster[tmp$inicio[j]:tmp$fim[j]]<-qtdPicos+2
         
       }
     }
@@ -301,9 +315,11 @@ intervalo <- function(densidade, amostras,
   
   #regitra contagem de amostras por cluster
   tmp<-as.data.frame(t(table(clusteres$cluster)),stringsAsFactors = F)
-
+  #renumera clusteres caso algum tenha sido apagado, exceto qtdPicos+2
+  maxCl<-nrow(tmp[tmp$Var2 != qtdPicos+2,])
+  tmp$Var2[tmp$Var2 != qtdPicos+2]<-c(1:maxCl)
   #df de ordenamento
-  ordem<-data.frame(prev=1:nrow(tmp),
+  ordem<-data.frame(prev=c(tmp$Var2),
                     new = NA,
                     count=NA)
   
@@ -323,7 +339,7 @@ intervalo <- function(densidade, amostras,
   threshosdAmostras<- ceiling(nrow(clusteres)*0.1)
   i=3
   for(i in 1:qtdPicos){
-    cat(ordem$count[i])
+    #cat(ordem$count[i])
     if(ordem$count[i] < threshosdAmostras){
       result<-0
       return(result)
@@ -552,7 +568,7 @@ processa = function(dirBase,
   genes <- unique(allAmostras$symbol)
   genes<-genes[order(genes)]
   #genes<-genes[which(genes == "MIS18A"):length(genes)]
-  gene="LINC02400"
+  gene="138"
   
   #loop ----
   #Prossesing each genes in sample
@@ -596,6 +612,8 @@ processa = function(dirBase,
     sdExpe<-pPicos[[6]]
     coordPicos<-pPicos[[7]]
     nomeGene = gene
+    
+    
     if(qtdPicos >= 2){
       # relevant results ----
       resultado <- intervalo(densidade = densidade,  
@@ -664,8 +682,12 @@ processa = function(dirBase,
                         counts=tmp$counts,
                         stringsAsFactors = F)
         tmp<-tmp[tmp$counts!=0,]
-        tmp$cor<-as.character(i)
-        valHist2<-rbind(valHist2,tmp)
+        if(nrow(tmp) == 0){
+          next
+        }else{
+          tmp$cor<-as.character(i)
+          valHist2<-rbind(valHist2,tmp)
+        }
       }  
       
       #grafico 3 ----
@@ -688,44 +710,51 @@ processa = function(dirBase,
       #ajusta cores e labels para incerto
       cores[qtdPicos+2]<-c(alpha("gray50",1))
       labels[qtdPicos+2]<-c("Uncertain")
-
-      g3<-ggplot()+
-        ggtitle("Peaks after filtration")+
-        theme_bw()+
-        xlab(xtext)+
-        ylab("Density") +
-        scale_y_continuous(name = expression("Density"), 
-                           #limits = c(0, max(densidade$yDens)),
-                           sec.axis = sec_axis(~ ./max(densidade2$yDens)* max(valHist2$counts) , 
-                                               name = "Counts"))+
-        geom_line(data=densidade2, aes(xDens,
-                                      yDens,
-                                      linetype="New Density",
-                                      color="New Density"))+
-        geom_point(data=valHist2, aes(x=x, 
-                                     y=(counts*max(densidade2$yDens)/ max(counts)),
-                                     color= cor,
-                                     shape= "Samples count"))
-      if(qtdPicos2!=0){
-        g3<-g3+geom_point(data = coordPicos,aes(x,
-                                         y,
-                                         shape="Peaks", 
-                                         color= "Peaks",
-                                         fill = "Peaks"))+
       
-        scale_fill_manual("",guide=F,values = c("Peaks"="magenta2"))+
-        scale_shape_manual("",values = c("Samples count"=21,
-                                         "Peaks"=25))+
-        scale_color_manual("",guide=F,values = c(cores,
-                                                 "Peaks"="magenta2", 
-                                                 "New Density"= "orange"))+
-        scale_linetype_manual("",values = c("New Density"=1))+
-        guides(shape = guide_legend(override.aes = list(shape = c(25,21), 
-                                                        fill=c("magenta2",NA), 
-                                                        color= c("magenta2", "black"))),
-               linetype = guide_legend(override.aes = list(color = "orange")))
-      }
-      g[[3]]<-g3
+      if(nrow(valHist2)==0){
+        text = paste("No graphic to show")
+        g3<-ggplot() + 
+          annotate("text", x = 4, y = 25, size=8, label = text) + 
+          theme_void()
+        }else{
+          g3<-ggplot()+
+            ggtitle("Peaks after filtration")+
+            theme_bw()+
+            xlab(xtext)+
+            ylab("Density") +
+            scale_y_continuous(name = expression("Density"), 
+                               #limits = c(0, max(densidade$yDens)),
+                               sec.axis = sec_axis(~ ./max(densidade2$yDens)* max(valHist2$counts) , 
+                                                   name = "Counts"))+
+            geom_line(data=densidade2, aes(xDens,
+                                           yDens,
+                                           linetype="New Density",
+                                           color="New Density"))+
+            geom_point(data=valHist2, aes(x=x, 
+                                          y=(counts*max(densidade2$yDens)/ max(counts)),
+                                          color= cor,
+                                          shape= "Samples count"))
+          if(qtdPicos2!=0){
+            g3<-g3+geom_point(data = coordPicos,aes(x,
+                                                    y,
+                                                    shape="Peaks", 
+                                                    color= "Peaks",
+                                                    fill = "Peaks"))+
+              
+              scale_fill_manual("",guide=F,values = c("Peaks"="magenta2"))+
+              scale_shape_manual("",values = c("Samples count"=21,
+                                               "Peaks"=25))+
+              scale_color_manual("",guide=F,values = c(cores,
+                                                       "Peaks"="magenta2", 
+                                                       "New Density"= "orange"))+
+              scale_linetype_manual("",values = c("New Density"=1))+
+              guides(shape = guide_legend(override.aes = list(shape = c(25,21), 
+                                                              fill=c("magenta2",NA), 
+                                                              color= c("magenta2", "black"))),
+                     linetype = guide_legend(override.aes = list(color = "orange")))
+          }
+        }
+        g[[3]]<-g3
       
       if(qtdPicos2>1){
         dirFigDest<-dirFig
@@ -993,8 +1022,12 @@ processaPar = function(dirBase,
                                             counts=tmp$counts,
                                             stringsAsFactors = F)
                             tmp<-tmp[tmp$counts!=0,]
-                            tmp$cor<-as.character(i)
-                            valHist2<-rbind(valHist2,tmp)
+                            if(nrow(tmp) == 0){
+                              next
+                            }else{
+                              tmp$cor<-as.character(i)
+                              valHist2<-rbind(valHist2,tmp)
+                            }
                           }  
                           
                           #grafico 3 ----
@@ -1018,6 +1051,12 @@ processaPar = function(dirBase,
                           cores[qtdPicos+2]<-c(alpha("gray50",1))
                           labels[qtdPicos+2]<-c("Uncertain")
                           
+                          if(nrow(valHist2)==0){
+                            text = paste("No graphic to show")
+                            g3<-ggplot() + 
+                              annotate("text", x = 4, y = 25, size=8, label = text) + 
+                              theme_void()
+                          }else{
                           g3<-ggplot()+
                             ggtitle("Peaks after filtration")+
                             theme_bw()+
@@ -1053,6 +1092,7 @@ processaPar = function(dirBase,
                                                                               fill=c("magenta2",NA), 
                                                                               color= c("magenta2", "black"))),
                                      linetype = guide_legend(override.aes = list(color = "orange")))
+                          }
                           }
                           g[[3]]<-g3
                           

@@ -27,7 +27,7 @@ parallelMode = T
 
 #File location ----
 #Did you change it to your base location?
-dirBase<-"Place here the correct name of your work folder"
+dirBase<-"/home/clovis/Doutorado/Projetos/Bimodalidade/testePar/Bimodality_Genes/"
 
 #figures
 dirFig<-file.path(dirBase,"figures/")
@@ -38,7 +38,7 @@ binDir<-file.path(dirBase,"bin/")
 source(file.path(binDir,"allFunctions.R"))
 
 loadDependencies()
-unpack(dirBase)
+#unpack(dirBase)
 
 #Threshold variables ----
 #minimum difference between peaks and valleys
@@ -53,13 +53,13 @@ minExpression = 0.02
 #Sample identification
 #You can use more than one sample if necessary
 #It will be processed in the appearance order
-vtipo<-c("KIRC")
+vtipo<-c("KIRKNew")
 
 #Sample file name
 #Must be in the same order above
 vfileName<-c("KIRC_FPKM_TP.tsv")
 
-i=1
+i=3
 #Main loop ----
 #Loop to process all samples
 for(i in 1:length(vfileName)){
