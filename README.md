@@ -8,7 +8,7 @@ This repository contains the files necessary to reproduce the results reported i
 
 The *data_files*  folder contains data from 522 patients with a primary tumor of clear cell renal carcinoma (KIRC).
 
-The original data is splited in two files: KIRC_FPKM_TP.tsv.tar.bz.part.aa and KIRC_FPKM_TP.tsv.tar.bz.part.ab
+The original data is splited in two files, placed inside **_data/parts_** folder: KIRC_FPKM_TP.tsv.tar.bz.part.aa and KIRC_FPKM_TP.tsv.tar.bz.part.ab
 
 The script unpack.sh reassemble and extract the data. 
 
@@ -17,7 +17,7 @@ If your need to process another dataset without compaction, first comment the li
 
 > \# unpack(dirBase)
 
-Your file must be placed inside the folder named data, and the file must have the following structure, separated by tabs:
+Your file must be placed inside the folder named **_data_**, and the file must have the following structure, separated by tabs:
 
 * sample - with the sample identifier. The final output files will use this identifier to list what samples belong to each cluster;
 
