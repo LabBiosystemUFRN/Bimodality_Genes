@@ -45,7 +45,8 @@ You can process more than one file per run.
 
 Then edit **_bimodalityDetection.R_** placing your file list and alias, as shown below:
 
-``` #Sample identification
+``` 
+#Sample identification
 
 #You can use more than one sample if necessary
 
@@ -67,26 +68,33 @@ vfileName<-c("FILE1.tsv",
 <a name="any"></a>
 ###  Our pipeline  
 To run our pipeline, download our files from [github](https://github.com/LabBiosystemUFRN/Bimodality_Genes) 
-> mkdir yourFolder
+``` 
+$ mkdir yourFolder
 
-> cd yourFolder
+$ cd yourFolder
 
-> git clone https://github.com/LabBiosystemUFRN/Bimodality_Genes
+$ git clone https://github.com/LabBiosystemUFRN/Bimodality_Genes
+```
 
 Then open the file **_yourFolber/bin/bimodalityDetection.R_**, locate the line
-> dirBase<-"Place here the correct name of yourFolder"
-
+```
+dirBase<-"Place here the correct name of yourFolder"
+```
 and replace it with your corret folder name, like
 
-> dirBase<-"/home/smith/yourFolder"
-
+```
+dirBase<-"/home/smith/yourFolder"
+```
 By default, the script will run in parallel mode. If you have memory issues using this mode, please, change the following line in the script:
 
-> parallelMode = F
-
+```
+parallelMode = F
+```
 Then you can run :
-> Rscript Bimodality_Genes/bin/bimodalityDetection.R
 
+```
+$ Rscript Bimodality_Genes/bin/bimodalityDetection.R
+```
 ### R dependencies
 
 > bnlearn, signal, ggplot2, mclust, gridExtra, grid,lattice, cowplot, reshape2 and doParallel
