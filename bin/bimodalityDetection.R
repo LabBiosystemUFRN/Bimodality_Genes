@@ -89,3 +89,5 @@ for(i in 1:length(vfileName)){
 }
 
 #dirFig = dirFigAtu
+
+teste
