@@ -510,6 +510,197 @@ processaPicos<- function(amostras = amostras,
   
 }
 
+#prepare and plot graphic 3
+graph3<- function(densidade2,
+                  qtdPicos2,
+                  coordPicos){
+  
+  # preparação de dados para o gráfico 3
+  #cria df com o valor dos histogramas por cluster
+  valHist2 <- data.frame(x =      numeric(), 
+                         counts = numeric(),
+                         cor =    character(),
+                         stringsAsFactors = F)
+  
+  breaks<-(seq(0,maxExpr,(maxExpr-minExpr)/nrow(densidade2)))
+  breaks[length(breaks)]<-maxExpr
+  #calcula histograma completo
+  #totaliza resultados e histogramas
+  i=1
+  for(i in 1:(qtdPicos)){
+    #calcula histograma do cluster
+    tmp <- hist(resultado[[i]]$expression, 
+                breaks = breaks ,
+                plot = F)
+    tmp<-data.frame(x=breaks[2:length(breaks)], 
+                    counts=tmp$counts,
+                    stringsAsFactors = F)
+    tmp<-tmp[tmp$counts!=0,]
+    if(nrow(tmp) == 0){
+      next
+    }else{
+      tmp$cor<-as.character(i)
+      valHist2<-rbind(valHist2,tmp)
+    }
+  }  
+  
+  #grafico 3 ----
+  xtext<-"Expression Values"
+  #define cores e labels
+  cores<-c("1"=alpha("red",0.75),
+           "2"=alpha("blue",0.75),
+           "3"= alpha("green4",0.75),
+           "4"= alpha("green3",0.75),
+           "5"= alpha("lightblue4",0.75),
+           "6"= alpha("lightsalmon2",0.75),
+           "7"=alpha("gray50",1))
+  labels= c("1st Cluster", 
+            "2nd Cluster",
+            "3rd Cluster",
+            "4th Cluster",
+            "5th Cluster",
+            "Other Clusters",
+            "Uncertain")
+  #ajusta cores e labels para incerto
+  cores[qtdPicos+2]<-c(alpha("gray50",1))
+  labels[qtdPicos+2]<-c("Uncertain")
+  
+  if(nrow(valHist2)==0){
+    text = paste("No graphic to show")
+    g3<-ggplot() + 
+      annotate("text", x = 4, y = 25, size=8, label = text) + 
+      theme_void()
+  }else{
+    g3<-ggplot()+
+      ggtitle("Peaks after filtration")+
+      theme_bw()+
+      xlab(xtext)+
+      ylab("Density") +
+      scale_y_continuous(name = expression("Density"), 
+                         #limits = c(0, max(densidade$yDens)),
+                         sec.axis = sec_axis(~ ./max(densidade2$yDens)* max(valHist2$counts) , 
+                                             name = "Counts"))+
+      geom_line(data=densidade2, aes(xDens,
+                                     yDens,
+                                     linetype="New Density",
+                                     color="New Density"))+
+      geom_point(data=valHist2, aes(x=x, 
+                                    y=(counts*max(densidade2$yDens)/ max(counts)),
+                                    color= cor,
+                                    shape= "Samples count"))
+    if(qtdPicos2!=0){
+      g3<-g3+geom_point(data = coordPicos,aes(x,
+                                              y,
+                                              shape="Peaks", 
+                                              color= "Peaks",
+                                              fill = "Peaks"))+
+        
+        scale_fill_manual("",guide=F,values = c("Peaks"="magenta2"))+
+        scale_shape_manual("",values = c("Samples count"=21,
+                                         "Peaks"=25))+
+        scale_color_manual("",guide=F,values = c(cores,
+                                                 "Peaks"="magenta2", 
+                                                 "New Density"= "orange"))+
+        scale_linetype_manual("",values = c("New Density"=1))+
+        guides(shape = guide_legend(override.aes = list(shape = c(25,21), 
+                                                        fill=c("magenta2",NA), 
+                                                        color= c("magenta2", "black"))),
+               linetype = guide_legend(override.aes = list(color = "orange")))
+    }
+  }
+  
+}
+
+#save the samples from clusters and peaks
+saveSamples<-function(dirSamplesDest,
+                      resultado,
+                      coordPicos){
+  #correlation between peaks and clusters
+  #ensure peak coord order
+  coordPicos<- coordPicos[order(coordPicos$x),]
+  coordPicos$peak<- seq(1:nrow(coordPicos))
+  coordPicos$cluster<- NA
+  
+  i=4
+  for(i in 1:(length(resultado[[1]])-1)){
+    #Find correlation peak / cluster
+    minVal <- min(resultado[[i]]$expression)
+    maxVal <- max(resultado[[i]]$expression)
+    j=2
+    for(j in 1:nrow(coordPicos)){
+      if(minVal <= coordPicos$x[j] & 
+         coordPicos$x[j] <= maxVal){
+        coordPicos$cluster[j]<-i
+      }  
+    }
+  }
+  
+  
+  
+  #salva identificador das amostras
+  i=4
+  for(i in 1:length(resultado)){
+    if(i %in% coordPicos$cluster){
+      peak<-coordPicos$peak[coordPicos$cluster == i]
+      idt<- paste0("_peak",peak,"_cluster",i)
+    }else{
+      idt<- paste0("_cluster",i)
+      
+    }
+    
+    write.table(as.character(resultado[[i]]$sample),
+                paste0(dirSamplesDest,"/",gene,"_",minExpression,idt,".lst"),
+                row.names = F, 
+                col.names = F)
+    #totaliza as contagens
+    
+  }
+  return(coordPicos) 
+}
+
+#write the summary
+writeSummary <- function(dirSamplesDest,
+                         resultado,
+                         coordPicos,
+                         amAbaixo){
+  soma<-0
+  lastCl<- length(resultado)
+  cl<-seq(1,(length(resultado)-1))
+  summFile<-paste0(dirSamplesDest,"/",gene,"_",minExpression,".summary")
+  
+  cat(paste("Below min Expression: ",nrow(amAbaixo),"\n"),file=summFile, append = F)
+  soma<-soma + nrow(amAbaixo)
+  #write clusters that correspond to peaks
+  i=1
+  for(i in 1:qtdPicos2){
+    clust<-coordPicos$cluster[coordPicos$peak == i]
+    cat(paste0("Peak ",i,": ",
+               nrow(resultado[[clust]])," (cluster ",clust,")\n"),
+        file=summFile, append = T)
+    cl<-cl[cl != clust]
+    soma<-soma + nrow(resultado[[clust]])
+  }
+  #other clusters
+  for(i in cl){
+    cat(paste0("Cluster ",i,": ",
+               nrow(resultado[[i]]),"\n"),
+        file=summFile, append = T)
+    soma<-soma + nrow(resultado[[i]])
+  }
+  
+  #Uncertain samples
+  cat(paste0("Uncertain: ",
+             nrow(resultado[[lastCl]]),"\n"),
+      file=summFile, append = T)
+  soma<-soma + nrow(resultado[[lastCl]])
+  
+  cat(paste0("\nTotal samples: ",
+             soma
+             ,"\n"),
+      file=summFile, append = T)
+}
+
+
 #Read samples file and start processing
 processa = function(dirBase, 
                     dirFig, 
@@ -570,7 +761,7 @@ processa = function(dirBase,
   genes <- unique(allAmostras$symbol)
   genes<-genes[order(genes)]
   #genes<-genes[which(genes == "MIS18A"):length(genes)]
-  gene="138"
+  gene="BRDT"
   
   #loop ----
   #Prossesing each genes in sample
@@ -658,106 +849,16 @@ processa = function(dirBase,
       amostrasTmp$V2<-gene
       colnames(amostrasTmp)<-c("V1","V3","V2")
       amostrasTmp<-amostrasTmp[,c("V1","V2","V3")]
+      
+      #Test if have more than 2 peaks after filtering
       #Novo teste de picos 
       pPicos2<-processaPicos(amostrasTmp,arqLog,gene)
       densidade2<-pPicos2[[1]]
       qtdPicos2<-pPicos2[[2]]
       coordPicos<-pPicos2[[7]]
-      
-      # preparação de dados para o gráfico 3
-      #cria df com o valor dos histogramas por cluster
-      valHist2 <- data.frame(x =      numeric(), 
-                            counts = numeric(),
-                            cor =    character(),
-                            stringsAsFactors = F)
-      
-      breaks<-(seq(0,maxExpr,(maxExpr-minExpr)/nrow(densidade2)))
-      breaks[length(breaks)]<-maxExpr
-      #calcula histograma completo
-      #totaliza resultados e histogramas
-      i=1
-      for(i in 1:(qtdPicos)){
-        #calcula histograma do cluster
-        tmp <- hist(resultado[[i]]$expression, 
-                    breaks = breaks ,
-                    plot = F)
-        tmp<-data.frame(x=breaks[2:length(breaks)], 
-                        counts=tmp$counts,
-                        stringsAsFactors = F)
-        tmp<-tmp[tmp$counts!=0,]
-        if(nrow(tmp) == 0){
-          next
-        }else{
-          tmp$cor<-as.character(i)
-          valHist2<-rbind(valHist2,tmp)
-        }
-      }  
-      
-      #grafico 3 ----
-      xtext<-"Expression Values"
-      #define cores e labels
-      cores<-c("1"=alpha("red",0.75),
-               "2"=alpha("blue",0.75),
-               "3"= alpha("green4",0.75),
-               "4"= alpha("green3",0.75),
-               "5"= alpha("lightblue4",0.75),
-               "6"= alpha("lightsalmon2",0.75),
-               "7"=alpha("gray50",1))
-      labels= c("1st Cluster", 
-                "2nd Cluster",
-                "3rd Cluster",
-                "4th Cluster",
-                "5th Cluster",
-                "Other Clusters",
-                "Uncertain")
-      #ajusta cores e labels para incerto
-      cores[qtdPicos+2]<-c(alpha("gray50",1))
-      labels[qtdPicos+2]<-c("Uncertain")
-      
-      if(nrow(valHist2)==0){
-        text = paste("No graphic to show")
-        g3<-ggplot() + 
-          annotate("text", x = 4, y = 25, size=8, label = text) + 
-          theme_void()
-        }else{
-          g3<-ggplot()+
-            ggtitle("Peaks after filtration")+
-            theme_bw()+
-            xlab(xtext)+
-            ylab("Density") +
-            scale_y_continuous(name = expression("Density"), 
-                               #limits = c(0, max(densidade$yDens)),
-                               sec.axis = sec_axis(~ ./max(densidade2$yDens)* max(valHist2$counts) , 
-                                                   name = "Counts"))+
-            geom_line(data=densidade2, aes(xDens,
-                                           yDens,
-                                           linetype="New Density",
-                                           color="New Density"))+
-            geom_point(data=valHist2, aes(x=x, 
-                                          y=(counts*max(densidade2$yDens)/ max(counts)),
-                                          color= cor,
-                                          shape= "Samples count"))
-          if(qtdPicos2!=0){
-            g3<-g3+geom_point(data = coordPicos,aes(x,
-                                                    y,
-                                                    shape="Peaks", 
-                                                    color= "Peaks",
-                                                    fill = "Peaks"))+
-              
-              scale_fill_manual("",guide=F,values = c("Peaks"="magenta2"))+
-              scale_shape_manual("",values = c("Samples count"=21,
-                                               "Peaks"=25))+
-              scale_color_manual("",guide=F,values = c(cores,
-                                                       "Peaks"="magenta2", 
-                                                       "New Density"= "orange"))+
-              scale_linetype_manual("",values = c("New Density"=1))+
-              guides(shape = guide_legend(override.aes = list(shape = c(25,21), 
-                                                              fill=c("magenta2",NA), 
-                                                              color= c("magenta2", "black"))),
-                     linetype = guide_legend(override.aes = list(color = "orange")))
-          }
-        }
-        g[[3]]<-g3
+      g[[3]]<-graph3(densidade2,
+                     qtdPicos2,
+                     coordPicos)
       
       if(qtdPicos2>1){
         dirFigDest<-dirFig
@@ -773,28 +874,19 @@ processa = function(dirBase,
                 gene = gene,
                 minExpression = minExpression)
       
-      #salva identificador das amostras
-      for(i in 1:length(resultado)){
-        write.table(as.character(resultado[[i]]$sample),
-                    paste0(dirSamplesDest,"/",gene,"_",minExpression,"_",i,".lst"),
-                    row.names = F, 
-                    col.names = F)
-        #totaliza as contagens
-        
-      }
-      sumario<-data.frame(th=nrow(amAbaixo),
-                          low=nrow(resultado[[3]][resultado[[3]]$expression<min(resultado[[1]]$expression),]),
-                          p1=nrow(resultado[[1]]),
-                          btw=nrow(resultado[[3]][(resultado[[3]]$expression>max(resultado[[1]]$expression)&
-                                                     resultado[[3]]$expression<min(resultado[[2]]$expression)),]),
-                          p2=nrow(resultado[[2]]),
-                          high=nrow(resultado[[3]][resultado[[3]]$expression>max(resultado[[2]]$expression),]))
-      sumario$tot<-sum(sumario)
-      write.table(sumario,paste0(dirSamplesDest,"/",gene,"_",minExpression,".summary"),
-                  row.names = F, 
-                  col.names = T,
-                  sep = "\t" )
+      #save samples ----
+      coordPicos<-saveSamples(dirSamplesDest = dirSamplesDest,
+                  resultado = resultado ,
+                  coordPicos = coordPicos)
       
+      
+      #write summary ----
+      writeSummary(dirSamplesDest = dirSamplesDest,
+                   resultado = resultado,
+                   coordPicos = coordPicos,
+                   amAbaixo = amAbaixo)
+      
+
       cont <- cont+1
       dfTmp[1,1]<-cont
       dfTmp[1,2]<-as.character(gene)
@@ -828,13 +920,13 @@ processa = function(dirBase,
 
 #Read samples file and start processing in parallel
 processaPar = function(dirBase, 
-                    dirFig, 
-                    atenuacao,
-                    minExpression,
-                    minSampleSize,
-                    minClusterSize,
-                    tipo,
-                    fileName){
+                       dirFig, 
+                       atenuacao,
+                       minExpression,
+                       minSampleSize,
+                       minClusterSize,
+                       tipo,
+                       fileName){
   #Create folder for figures
   dirFigFake<-paste0(dirFig,"fake/")
   if (!dir.exists(dirFig)){
@@ -886,7 +978,7 @@ processaPar = function(dirBase,
   genes <- unique(allAmostras$symbol)
   genes<-genes[order(genes)]
   #genes<-genes[which(genes == "MIS18A"):length(genes)]
-  #gene="FAF2"
+  gene="BRDT"
   
   library(doParallel)
   nucleos<-detectCores()-2
@@ -931,7 +1023,7 @@ processaPar = function(dirBase,
                           cat(paste("Error processing",gene,":  no expressions values found.","\n"),file=arqLog,append = T)
                           return()}
                         #nome do gene ----
-                        #genes com alias tem nomes separados por "//" e devem ser eleiminados
+                        #genes com alias tem nomes separados por "//" e devem ser eliminados
                         if(grepl("/",gene)){
                           gene<-strsplit(gene,"/")[[1]][1]
                         }
@@ -961,6 +1053,8 @@ processaPar = function(dirBase,
                         sdExpe<-pPicos[[6]]
                         coordPicos<-pPicos[[7]]
                         nomeGene = gene
+                        
+                        
                         if(qtdPicos >= 2){
                           # relevant results ----
                           resultado <- intervalo(densidade = densidade,  
@@ -1003,106 +1097,16 @@ processaPar = function(dirBase,
                           amostrasTmp$V2<-gene
                           colnames(amostrasTmp)<-c("V1","V3","V2")
                           amostrasTmp<-amostrasTmp[,c("V1","V2","V3")]
+                          
+                          #Test if have more than 2 peaks after filtering
                           #Novo teste de picos 
                           pPicos2<-processaPicos(amostrasTmp,arqLog,gene)
                           densidade2<-pPicos2[[1]]
                           qtdPicos2<-pPicos2[[2]]
                           coordPicos<-pPicos2[[7]]
-                          
-                          # preparação de dados para o gráfico 3
-                          #cria df com o valor dos histogramas por cluster
-                          valHist2 <- data.frame(x =      numeric(), 
-                                                 counts = numeric(),
-                                                 cor =    character(),
-                                                 stringsAsFactors = F)
-                          
-                          breaks<-(seq(0,maxExpr,(maxExpr-minExpr)/nrow(densidade2)))
-                          breaks[length(breaks)]<-maxExpr
-                          #calcula histograma completo
-                          #totaliza resultados e histogramas
-                          i=1
-                          for(i in 1:(qtdPicos)){
-                            #calcula histograma do cluster
-                            tmp <- hist(resultado[[i]]$expression, 
-                                        breaks = breaks ,
-                                        plot = F)
-                            tmp<-data.frame(x=breaks[2:length(breaks)], 
-                                            counts=tmp$counts,
-                                            stringsAsFactors = F)
-                            tmp<-tmp[tmp$counts!=0,]
-                            if(nrow(tmp) == 0){
-                              next
-                            }else{
-                              tmp$cor<-as.character(i)
-                              valHist2<-rbind(valHist2,tmp)
-                            }
-                          }  
-                          
-                          #grafico 3 ----
-                          xtext<-"Expression Values"
-                          #define cores e labels
-                          cores<-c("1"=alpha("red",0.75),
-                                   "2"=alpha("blue",0.75),
-                                   "3"= alpha("green4",0.75),
-                                   "4"= alpha("green3",0.75),
-                                   "5"= alpha("lightblue4",0.75),
-                                   "6"= alpha("lightsalmon2",0.75),
-                                   "7"=alpha("gray50",1))
-                          labels= c("1st Cluster", 
-                                    "2nd Cluster",
-                                    "3rd Cluster",
-                                    "4th Cluster",
-                                    "5th Cluster",
-                                    "Other Clusters",
-                                    "Uncertain")
-                          #ajusta cores e labels para incerto
-                          cores[qtdPicos+2]<-c(alpha("gray50",1))
-                          labels[qtdPicos+2]<-c("Uncertain")
-                          
-                          if(nrow(valHist2)==0){
-                            text = paste("No graphic to show")
-                            g3<-ggplot() + 
-                              annotate("text", x = 4, y = 25, size=8, label = text) + 
-                              theme_void()
-                          }else{
-                          g3<-ggplot()+
-                            ggtitle("Peaks after filtration")+
-                            theme_bw()+
-                            xlab(xtext)+
-                            ylab("Density") +
-                            scale_y_continuous(name = expression("Density"), 
-                                               #limits = c(0, max(densidade$yDens)),
-                                               sec.axis = sec_axis(~ ./max(densidade2$yDens)* max(valHist2$counts) , 
-                                                                   name = "Counts"))+
-                            geom_line(data=densidade2, aes(xDens,
-                                                           yDens,
-                                                           linetype="New Density",
-                                                           color="New Density"))+
-                            geom_point(data=valHist2, aes(x=x, 
-                                                          y=(counts*max(densidade2$yDens)/ max(counts)),
-                                                          color= cor,
-                                                          shape= "Samples count"))
-                          if(qtdPicos2!=0){
-                            g3<-g3+geom_point(data = coordPicos,aes(x,
-                                                                    y,
-                                                                    shape="Peaks", 
-                                                                    color= "Peaks",
-                                                                    fill = "Peaks"))+
-                              
-                              scale_fill_manual("",guide=F,values = c("Peaks"="magenta2"))+
-                              scale_shape_manual("",values = c("Samples count"=21,
-                                                               "Peaks"=25))+
-                              scale_color_manual("",guide=F,values = c(cores,
-                                                                       "Peaks"="magenta2", 
-                                                                       "New Density"= "orange"))+
-                              scale_linetype_manual("",values = c("New Density"=1))+
-                              guides(shape = guide_legend(override.aes = list(shape = c(25,21), 
-                                                                              fill=c("magenta2",NA), 
-                                                                              color= c("magenta2", "black"))),
-                                     linetype = guide_legend(override.aes = list(color = "orange")))
-                          }
-                          }
-                          g[[3]]<-g3
+                          g[[3]]<-graph3(densidade2,
+                                         qtdPicos2,
+                                         coordPicos)
                           
                           if(qtdPicos2>1){
                             dirFigDest<-dirFig
@@ -1118,27 +1122,18 @@ processaPar = function(dirBase,
                                     gene = gene,
                                     minExpression = minExpression)
                           
-                          #salva identificador das amostras
-                          for(i in 1:length(resultado)){
-                            write.table(as.character(resultado[[i]]$sample),
-                                        paste0(dirSamplesDest,"/",gene,"_",minExpression,"_",i,".lst"),
-                                        row.names = F, 
-                                        col.names = F)
-                            #totaliza as contagens
-                            
-                          }
-                          sumario<-data.frame(th=nrow(amAbaixo),
-                                              low=nrow(resultado[[3]][resultado[[3]]$expression<min(resultado[[1]]$expression),]),
-                                              p1=nrow(resultado[[1]]),
-                                              btw=nrow(resultado[[3]][(resultado[[3]]$expression>max(resultado[[1]]$expression)&
-                                                                         resultado[[3]]$expression<min(resultado[[2]]$expression)),]),
-                                              p2=nrow(resultado[[2]]),
-                                              high=nrow(resultado[[3]][resultado[[3]]$expression>max(resultado[[2]]$expression),]))
-                          sumario$tot<-sum(sumario)
-                          write.table(sumario,paste0(dirSamplesDest,"/",gene,"_",minExpression,".summary"),
-                                      row.names = F, 
-                                      col.names = T,
-                                      sep = "\t" )
+                          #save samples ----
+                          coordPicos<-saveSamples(dirSamplesDest = dirSamplesDest,
+                                                  resultado = resultado ,
+                                                  coordPicos = coordPicos)
+                          
+                          
+                          #write summary ----
+                          writeSummary(dirSamplesDest = dirSamplesDest,
+                                       resultado = resultado,
+                                       coordPicos = coordPicos,
+                                       amAbaixo = amAbaixo)
+                          
                           
                           cont <- cont+1
                           dfTmp[1,1]<-cont
@@ -1172,5 +1167,3 @@ processaPar = function(dirBase,
   #close(arqLog)
   
 }
-
-

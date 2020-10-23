@@ -63,7 +63,7 @@ vtipo<-c("KIRKNew")
 #Must be in the same order above
 vfileName<-c("KIRC_FPKM_TP.tsv")
 
-i=3
+i=1
 #Main loop ----
 #Loop to process all samples
 for(i in 1:length(vfileName)){
