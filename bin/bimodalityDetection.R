@@ -29,7 +29,7 @@ parallelMode = T
 #Did you change it to your base location?
 dirBase<-"Place here the correct name of your work folder"
 
-#dirBase<-"/home/clovis/Doutorado/Projetos/Bimodalidade/testePar/Bimodality_Genes/"
+#dirBase<-"/home/clovis/Doutorado/Projetos/Bimodalidade/TD0/"
 
 #figures
 dirFig<-file.path(dirBase,"figures/")
@@ -40,7 +40,7 @@ binDir<-file.path(dirBase,"bin/")
 source(file.path(binDir,"allFunctions.R"))
 
 loadDependencies()
-#unpack(dirBase)
+unpack(dirBase)
 
 #Threshold variables and parameters----
 #only samples with expression above this value will be consider
@@ -50,9 +50,9 @@ minSampleSize = 50
 #Ignore all cluster with size below this percentage of total samples
 minClusterSize = 0.1
 #minimum difference between peaks and valleys
-limiarUp = 0.05 #threshold Up
+limiarUp = 0.1 #threshold Up
 #ignore peaks with density values below this value
-limiarDw = 0.1 #threshold Down
+limiarDw = 0.2 #threshold Down
 #smoothing factor
 atenuacao = 0.05
 

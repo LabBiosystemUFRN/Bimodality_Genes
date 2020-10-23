@@ -38,6 +38,8 @@ loadDependencies <- function(){
 #unpack data
 unpack<- function(dirBase){
   
+  cat("Unpacking: ")
+  
   exec<-paste0(dirBase,"bin/unpack.sh")
   command<-paste0(exec," ",dirBase)
   system(command)
@@ -512,8 +514,11 @@ processaPicos<- function(amostras = amostras,
 
 #prepare and plot graphic 3
 graph3<- function(densidade2,
-                  qtdPicos2,
-                  coordPicos){
+                  qtdPicos,
+                  coordPicos,
+                  maxExpr,
+                  minExpr, 
+                  resultado){
   
   # preparação de dados para o gráfico 3
   #cria df com o valor dos histogramas por cluster
@@ -588,7 +593,7 @@ graph3<- function(densidade2,
                                     y=(counts*max(densidade2$yDens)/ max(counts)),
                                     color= cor,
                                     shape= "Samples count"))
-    if(qtdPicos2!=0){
+    if(qtdPicos!=0){
       g3<-g3+geom_point(data = coordPicos,aes(x,
                                               y,
                                               shape="Peaks", 
@@ -614,7 +619,8 @@ graph3<- function(densidade2,
 #save the samples from clusters and peaks
 saveSamples<-function(dirSamplesDest,
                       resultado,
-                      coordPicos){
+                      coordPicos, 
+                      gene){
   #correlation between peaks and clusters
   #ensure peak coord order
   coordPicos<- coordPicos[order(coordPicos$x),]
@@ -635,10 +641,10 @@ saveSamples<-function(dirSamplesDest,
     }
   }
   
-  
+  coordPicos<-coordPicos[unique(coordPicos$cluster),]
   
   #salva identificador das amostras
-  i=4
+  i=2
   for(i in 1:length(resultado)){
     if(i %in% coordPicos$cluster){
       peak<-coordPicos$peak[coordPicos$cluster == i]
@@ -662,10 +668,12 @@ saveSamples<-function(dirSamplesDest,
 writeSummary <- function(dirSamplesDest,
                          resultado,
                          coordPicos,
-                         amAbaixo){
+                         amAbaixo, 
+                         gene,
+                         qtdPicos2){
   soma<-0
   lastCl<- length(resultado)
-  cl<-seq(1,(length(resultado)-1))
+  nCl<-seq(1,(length(resultado)-1))
   summFile<-paste0(dirSamplesDest,"/",gene,"_",minExpression,".summary")
   
   cat(paste("Below min Expression: ",nrow(amAbaixo),"\n"),file=summFile, append = F)
@@ -677,11 +685,11 @@ writeSummary <- function(dirSamplesDest,
     cat(paste0("Peak ",i,": ",
                nrow(resultado[[clust]])," (cluster ",clust,")\n"),
         file=summFile, append = T)
-    cl<-cl[cl != clust]
+    nCl<-nCl[nCl != clust]
     soma<-soma + nrow(resultado[[clust]])
   }
   #other clusters
-  for(i in cl){
+  for(i in nCl){
     cat(paste0("Cluster ",i,": ",
                nrow(resultado[[i]]),"\n"),
         file=summFile, append = T)
@@ -761,7 +769,7 @@ processa = function(dirBase,
   genes <- unique(allAmostras$symbol)
   genes<-genes[order(genes)]
   #genes<-genes[which(genes == "MIS18A"):length(genes)]
-  gene="BRDT"
+  #gene="KIRREL3-AS2"
   
   #loop ----
   #Prossesing each genes in sample
@@ -856,9 +864,13 @@ processa = function(dirBase,
       densidade2<-pPicos2[[1]]
       qtdPicos2<-pPicos2[[2]]
       coordPicos<-pPicos2[[7]]
-      g[[3]]<-graph3(densidade2,
-                     qtdPicos2,
-                     coordPicos)
+      #graph 3 ----
+      g[[3]]<-graph3(densidade2 = densidade2,
+                    qtdPicos = qtdPicos2,
+                     coordPicos = coordPicos,
+                     maxExpr = maxExpr,
+                     minExpr = minExpr,
+                    resultado = resultado)
       
       if(qtdPicos2>1){
         dirFigDest<-dirFig
@@ -877,14 +889,17 @@ processa = function(dirBase,
       #save samples ----
       coordPicos<-saveSamples(dirSamplesDest = dirSamplesDest,
                   resultado = resultado ,
-                  coordPicos = coordPicos)
+                  coordPicos = coordPicos, 
+                  gene = gene)
       
       
       #write summary ----
       writeSummary(dirSamplesDest = dirSamplesDest,
                    resultado = resultado,
                    coordPicos = coordPicos,
-                   amAbaixo = amAbaixo)
+                   amAbaixo = amAbaixo,
+                   gene = gene,
+                   qtdPicos2 = qtdPicos2 )
       
 
       cont <- cont+1
@@ -978,7 +993,7 @@ processaPar = function(dirBase,
   genes <- unique(allAmostras$symbol)
   genes<-genes[order(genes)]
   #genes<-genes[which(genes == "MIS18A"):length(genes)]
-  gene="BRDT"
+  #genes="BRDT"
   
   library(doParallel)
   nucleos<-detectCores()-2
@@ -1002,6 +1017,9 @@ processaPar = function(dirBase,
                       "tipo",
                       "fileName",
                       "dirDados",
+                      "limiarDw",
+                      "limiarUp",
+                      #functions
                       "achaPico",
                       "processaPicos",
                       "aplicaTH",
@@ -1010,8 +1028,9 @@ processaPar = function(dirBase,
                       "normaliza",
                       "printGraf",
                       "processaPicos",
-                      "limiarDw",
-                      "limiarUp")) %dopar% {
+                      "graph3",
+                      "saveSamples",
+                      "writeSummary")) %dopar% {
                         gene<-genes[geneIdx]
                         
                         #le amostras ----
@@ -1104,9 +1123,13 @@ processaPar = function(dirBase,
                           densidade2<-pPicos2[[1]]
                           qtdPicos2<-pPicos2[[2]]
                           coordPicos<-pPicos2[[7]]
-                          g[[3]]<-graph3(densidade2,
-                                         qtdPicos2,
-                                         coordPicos)
+                          #graph 3 ----
+                          g[[3]]<-graph3(densidade2 = densidade2,
+                                         qtdPicos = qtdPicos2,
+                                         coordPicos = coordPicos,
+                                         maxExpr = maxExpr,
+                                         minExpr = minExpr,
+                                         resultado = resultado)
                           
                           if(qtdPicos2>1){
                             dirFigDest<-dirFig
@@ -1125,14 +1148,17 @@ processaPar = function(dirBase,
                           #save samples ----
                           coordPicos<-saveSamples(dirSamplesDest = dirSamplesDest,
                                                   resultado = resultado ,
-                                                  coordPicos = coordPicos)
+                                                  coordPicos = coordPicos, 
+                                                  gene = gene)
                           
                           
                           #write summary ----
                           writeSummary(dirSamplesDest = dirSamplesDest,
                                        resultado = resultado,
                                        coordPicos = coordPicos,
-                                       amAbaixo = amAbaixo)
+                                       amAbaixo = amAbaixo,
+                                       gene = gene,
+                                       qtdPicos2 = qtdPicos2 )
                           
                           
                           cont <- cont+1
