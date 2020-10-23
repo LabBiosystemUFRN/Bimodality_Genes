@@ -993,7 +993,7 @@ processaPar = function(dirBase,
   genes <- unique(allAmostras$symbol)
   genes<-genes[order(genes)]
   #genes<-genes[which(genes == "MIS18A"):length(genes)]
-  #genes="BRDT"
+  #genes="BRDT"#
   
   library(doParallel)
   nucleos<-detectCores()-2
