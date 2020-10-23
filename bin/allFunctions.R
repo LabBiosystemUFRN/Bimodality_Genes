@@ -169,7 +169,7 @@ normaliza <- function(x){
 #Uses GMM to cluster samples groups
 intervalo <- function(densidade, amostras, 
                       maxExpr, minExpr, 
-                      nomeGene, dirFig, minExpression, 
+                      nomeGene, dirFig, minExpression, minClusterSize,
                       atenuacao, tipo, qtdPicos,coordPicos){
   library(ggplot2)
   
@@ -336,7 +336,7 @@ intervalo <- function(densidade, amostras,
   ordem$new<-c(minOrdem:maxOrdem)
 
   #Garante que cada pico possui pelo menos 10% das amostras totais
-  threshosdAmostras<- ceiling(nrow(clusteres)*0.1)
+  threshosdAmostras<- ceiling(nrow(clusteres)*minClusterSize)
   i=3
   for(i in 1:qtdPicos){
     #cat(ordem$count[i])
@@ -515,6 +515,8 @@ processa = function(dirBase,
                     dirFig, 
                     atenuacao,
                     minExpression,
+                    minSampleSize,
+                    minClusterSize,
                     tipo,
                     fileName){
   #Create folder for figures
@@ -598,7 +600,7 @@ processa = function(dirBase,
       amAbaixo<-amostras[amostras$V3<minExpression,] #usa valor fixo
       amostras<-amostras[amostras$V3>=minExpression,] #usa valor fixo
     }
-    if(nrow(amostras)<50){
+    if(nrow(amostras)<minSampleSize){
       writeLines(paste("Not enough data - just ", nrow(amostras), " samples for ", gene))
       cat(paste("Not enough data - just ", nrow(amostras), " samples for ", gene,"\n"),file=arqLog,append = T)
       next()
@@ -623,6 +625,7 @@ processa = function(dirBase,
                              nomeGene = gene,
                              dirFig = dirFig,
                              minExpression = minExpression, 
+                             minClusterSize = minClusterSize,
                              atenuacao = atenuacao, 
                              tipo = tipo, 
                              qtdPicos = qtdPicos,
@@ -828,6 +831,8 @@ processaPar = function(dirBase,
                     dirFig, 
                     atenuacao,
                     minExpression,
+                    minSampleSize,
+                    minClusterSize,
                     tipo,
                     fileName){
   #Create folder for figures
@@ -900,6 +905,8 @@ processaPar = function(dirBase,
                       "dirFig", 
                       "atenuacao",
                       "minExpression",
+                      "minSampleSize",
+                      "minClusterSize",
                       "tipo",
                       "fileName",
                       "dirDados",
@@ -940,7 +947,7 @@ processaPar = function(dirBase,
                           amAbaixo<-amostras[amostras$V3<minExpression,] #usa valor fixo
                           amostras<-amostras[amostras$V3>=minExpression,] #usa valor fixo
                         }
-                        if(nrow(amostras)<50){
+                        if(nrow(amostras)<minSampleSize){
                           writeLines(paste("Not enough data - just ", nrow(amostras), " samples for ", gene))
                           cat(paste("Not enough data - just ", nrow(amostras), " samples for ", gene,"\n"),file=arqLog,append = T)
                           return()
@@ -963,6 +970,7 @@ processaPar = function(dirBase,
                                                  nomeGene = gene,
                                                  dirFig = dirFig,
                                                  minExpression = minExpression, 
+                                                 minClusterSize = minClusterSize,
                                                  atenuacao = atenuacao, 
                                                  tipo = tipo, 
                                                  qtdPicos = qtdPicos,

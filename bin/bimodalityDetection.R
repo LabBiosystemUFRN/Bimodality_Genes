@@ -40,15 +40,19 @@ source(file.path(binDir,"allFunctions.R"))
 loadDependencies()
 #unpack(dirBase)
 
-#Threshold variables ----
+#Threshold variables and parameters----
+#only samples with expression above this value will be consider
+minExpression = 0.02 
+#Discard all genes with a sample count below this value 
+minSampleSize = 50
+#Ignore all cluster with size below this percentage of total samples
+minClusterSize = 0.1
 #minimum difference between peaks and valleys
 limiarUp = 0.05 #threshold Up
 #ignore peaks with density values below this value
 limiarDw = 0.1 #threshold Down
 #smoothing factor
 atenuacao = 0.05
-#only samples with expression above this value will be consider
-minExpression = 0.02 
 
 #Sample identification
 #You can use more than one sample if necessary
@@ -74,6 +78,8 @@ for(i in 1:length(vfileName)){
              dirFig = dirFigAtu, 
              atenuacao = atenuacao,
              minExpression = minExpression, 
+             minSampleSize =minSampleSize,
+             minClusterSize = minClusterSize,
              tipo = tipo,
              fileName=fileName)
     
@@ -82,6 +88,8 @@ for(i in 1:length(vfileName)){
            dirFig = dirFigAtu, 
            atenuacao = atenuacao,
            minExpression = minExpression, 
+           minSampleSize =minSampleSize,
+           minClusterSize = minClusterSize,
            tipo = tipo,
            fileName=fileName)
   }
@@ -89,5 +97,3 @@ for(i in 1:length(vfileName)){
 }
 
 #dirFig = dirFigAtu
-
-teste
