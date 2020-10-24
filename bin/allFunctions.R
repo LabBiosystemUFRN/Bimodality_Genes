@@ -641,7 +641,17 @@ saveSamples<-function(dirSamplesDest,
     }
   }
   
-  coordPicos<-coordPicos[unique(coordPicos$cluster),]
+  
+
+  if(nrow(coordPicos[is.na(coordPicos$cluster),])>0){
+    if(1 %in% coordPicos$cluster){
+      coordPicos$cluster[is.na(coordPicos$cluster)]<-2
+    }else{
+      coordPicos$cluster[is.na(coordPicos$cluster)]<-1
+    }
+  }
+
+  coordPicos<-coordPicos[!duplicated(coordPicos$cluster),]
   
   #salva identificador das amostras
   i=2
@@ -678,6 +688,10 @@ writeSummary <- function(dirSamplesDest,
   
   cat(paste("Below min Expression: ",nrow(amAbaixo),"\n"),file=summFile, append = F)
   soma<-soma + nrow(amAbaixo)
+  
+  if(qtdPicos2 > nrow(coordPicos)){
+    qtdPicos2 <- nrow(coordPicos)
+  }
   #write clusters that correspond to peaks
   i=1
   for(i in 1:qtdPicos2){
