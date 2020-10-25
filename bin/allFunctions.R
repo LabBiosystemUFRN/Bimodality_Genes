@@ -731,7 +731,8 @@ processa = function(dirBase,
                     minSampleSize,
                     minClusterSize,
                     tipo,
-                    fileName){
+                    fileName,
+                    useLog){
   #Create folder for figures
   dirFigFake<-paste0(dirFig,"fake/")
   if (!dir.exists(dirFig)){
@@ -792,6 +793,9 @@ processa = function(dirBase,
     amostras <- na.omit(allAmostras[allAmostras$symbol == gene,
                                     c("sample","symbol","FPKM")])
     colnames(amostras)<-c("V1","V2","V3")
+    if(useLog){
+      amostras$V3<-log2(amostras$V3)
+    }
     if(nrow(amostras) == 0){
       writeLines(paste("Error processing ",gene,": no expressions values found."))
       cat(paste("Error processing",gene,":  no expressions values found.","\n"),file=arqLog,append = T)
@@ -1051,6 +1055,9 @@ processaPar = function(dirBase,
                         amostras <- na.omit(allAmostras[allAmostras$symbol == gene,
                                                         c("sample","symbol","FPKM")])
                         colnames(amostras)<-c("V1","V2","V3")
+                        if(useLog){
+                          amostras$V3<-log2(amostras$V3)
+                        }
                         if(nrow(amostras) == 0){
                           writeLines(paste("Error processing ",gene,": no expressions values found."))
                           cat(paste("Error processing",gene,":  no expressions values found.","\n"),file=arqLog,append = T)

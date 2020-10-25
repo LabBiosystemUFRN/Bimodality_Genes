@@ -55,6 +55,8 @@ limiarUp = 0.1 #threshold Up
 limiarDw = 0.2 #threshold Down
 #smoothing factor
 atenuacao = 0.05
+#Transform all expression values using log2
+useLog = F
 
 #Sample identification
 #You can use more than one sample if necessary
@@ -83,7 +85,8 @@ for(i in 1:length(vfileName)){
              minSampleSize =minSampleSize,
              minClusterSize = minClusterSize,
              tipo = tipo,
-             fileName=fileName)
+             fileName=fileName,
+             useLog = useLog)
     
   }else{
     processa(dirBase = dirBase, 
@@ -93,7 +96,8 @@ for(i in 1:length(vfileName)){
            minSampleSize =minSampleSize,
            minClusterSize = minClusterSize,
            tipo = tipo,
-           fileName=fileName)
+           fileName=fileName,
+           useLog = useLog)
   }
   
 }
