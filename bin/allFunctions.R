@@ -792,7 +792,7 @@ processa = function(dirBase,
     #le amostras ----
     amostras <- na.omit(allAmostras[allAmostras$symbol == gene,
                                     c("sample","symbol","FPKM")])
-    colnames(amostras)<-c("V1","V2","V3")
+    colnames(amostras)<-c("V1","V2","V3") 
     if(useLog){
       amostras$V3<-log2(amostras$V3)
     }
