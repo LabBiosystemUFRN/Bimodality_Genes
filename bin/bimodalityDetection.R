@@ -29,7 +29,7 @@ parallelMode = T
 #Did you change it to your base location?
 dirBase<-"Place here the correct name of your work folder"
 
-#dirBase<-"/home/clovis/Doutorado/Projetos/Bimodalidade/TD0/"
+dirBase<-"/home/clovis/Doutorado/Projetos/Bimodalidade/TD0/"
 
 #figures
 dirFig<-file.path(dirBase,"figures/")
@@ -55,8 +55,9 @@ limiarUp = 0.1 #threshold Up
 limiarDw = 0.2 #threshold Down
 #smoothing factor
 atenuacao = 0.05
-#Transform all expression values using log2
-useLog = F
+#Transform all expression values using log10 or log2 
+# the values can be none, log10 or log2
+useLog = "none"
 
 #Sample identification
 #You can use more than one sample if necessary

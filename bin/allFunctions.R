@@ -187,7 +187,7 @@ intervalo <- function(densidade, amostras,
   g<-list()
   
   #vetor de break points
-  breaks<-(seq(0,maxExpr,(maxExpr-minExpr)/nrow(densidade)))
+  breaks<-(seq(minExpr,maxExpr,(maxExpr-minExpr)/nrow(densidade)))
   breaks[length(breaks)]<-maxExpr
   
   
@@ -319,6 +319,10 @@ intervalo <- function(densidade, amostras,
   tmp<-as.data.frame(t(table(clusteres$cluster)),stringsAsFactors = F)
   #renumera clusteres caso algum tenha sido apagado, exceto qtdPicos+2
   maxCl<-nrow(tmp[tmp$Var2 != qtdPicos+2,])
+  if(maxCl<=qtdPicos){
+    result<-1
+    return(result)
+  }
   tmp$Var2[tmp$Var2 != qtdPicos+2]<-c(1:maxCl)
   #df de ordenamento
   ordem<-data.frame(prev=c(tmp$Var2),
@@ -527,7 +531,7 @@ graph3<- function(densidade2,
                          cor =    character(),
                          stringsAsFactors = F)
   
-  breaks<-(seq(0,maxExpr,(maxExpr-minExpr)/nrow(densidade2)))
+  breaks<-(seq(minExpr,maxExpr,(maxExpr-minExpr)/nrow(densidade2)))
   breaks[length(breaks)]<-maxExpr
   #calcula histograma completo
   #totaliza resultados e histogramas
@@ -784,18 +788,18 @@ processa = function(dirBase,
   genes <- unique(allAmostras$symbol)
   genes<-genes[order(genes)]
   #genes<-genes[which(genes == "MIS18A"):length(genes)]
-  #gene="KIRREL3-AS2"
+  #gene="GML"
+  # pos<-which(genes == gene)
+  # genes<-genes[pos:length(genes)]
   
   #loop ----
   #Prossesing each genes in sample
+  bimodalGenes<-NA
   for(gene in genes){
     #le amostras ----
     amostras <- na.omit(allAmostras[allAmostras$symbol == gene,
                                     c("sample","symbol","FPKM")])
     colnames(amostras)<-c("V1","V2","V3") 
-    if(useLog){
-      amostras$V3<-log2(amostras$V3)
-    }
     if(nrow(amostras) == 0){
       writeLines(paste("Error processing ",gene,": no expressions values found."))
       cat(paste("Error processing",gene,":  no expressions values found.","\n"),file=arqLog,append = T)
@@ -821,6 +825,13 @@ processa = function(dirBase,
       writeLines(paste("Not enough data - just ", nrow(amostras), " samples for ", gene))
       cat(paste("Not enough data - just ", nrow(amostras), " samples for ", gene,"\n"),file=arqLog,append = T)
       next()
+    }
+    if(useLog == "log2"){
+      amostras$V3<-log2(amostras$V3)
+    }else if(useLog == "log10"){
+      amostras$V3<-log10(amostras$V3)
+    }else if(useLog != "none"){
+      warning("Invalid option for useLog. Proceeding with default expression values...")
     }
     pPicos<-processaPicos(amostras,arqLog,gene)
     densidade<-pPicos[[1]]
@@ -882,6 +893,12 @@ processa = function(dirBase,
       densidade2<-pPicos2[[1]]
       qtdPicos2<-pPicos2[[2]]
       coordPicos<-pPicos2[[7]]
+      if (qtdPicos2 == 0){
+        writeLines(paste("Second pass fail ",gene))
+        cat(paste("Second pass fail ",gene,"\n"),file=arqLog,append = T)
+        next()
+      }
+      
       #graph 3 ----
       g[[3]]<-graph3(densidade2 = densidade2,
                     qtdPicos = qtdPicos2,
@@ -933,21 +950,53 @@ processa = function(dirBase,
       writeLines(c("*******************************************************",
                    paste("Bimodality for ", gene),
                    "*******************************************************"))
+      bimodalGenes<-c(bimodalGenes,gene)
 
     }
     
     
   }
   
+  sumario<-paste0(dirBase,"samples/",tipo,"Summary.txt")
   
-  #dev.off()
+  bimodalGenes<-na.exclude(bimodalGenes)
+  bimodais<-length(bimodalGenes)
+  nGenes<-length(genes)
+  border="*****************************************\n"
   
-  colnames(lista)<-c("Nr","Gene")
-  colnames(erros)<-c("Arquivo")
+  if(useLog == "log2"){
+    text1<-"Using expression values with Log2\n"
+  }else if(useLog == "log10"){
+    text1<-"Using expression values with Log10\n"
+  }else{
+    text1<-"Using expression values without transformation\n"
+  }
   
-  #write.csv(lista,paste0(dirFig,"lista.csv"),row.names = F)
-  #write.csv(erros,paste0(dirFig,"erros.csv"),row.names = F)
-  #close(arqLog)
+  cat(paste0(border,"Summary for ", tipo,"\n",border, text1,"\n"),
+      file=  sumario,
+      append = T)
+  
+  cat(paste0("- ", bimodais, " bimodal genes in ", nGenes," genes\n\n- ",
+             round(bimodais/nGenes*100,2),"% of genes were bimodal \n\n",
+             "Bimodal Genes:\n"),
+      file=  sumario,
+      append = T)
+  for(i in 1:length(bimodalGenes)){
+    cat(paste(bimodalGenes[i],"\n"),
+        file=  sumario,
+        append = T)
+  }
+  
+  cat(paste0("\nParameters: \n", 
+             "minExpression = ", minExpression, 
+             "\nminSampleSize =", minSampleSize,
+             "\nminClusterSize = ",minClusterSize,
+             "\nthreshold Up = ", limiarUp, 
+             "\nthreshold Down = ",limiarDw,
+             "\natenuation = ",atenuacao,
+             "\n\n"),
+      file=  sumario,
+      append = T)
   
 }
 
@@ -959,7 +1008,9 @@ processaPar = function(dirBase,
                        minSampleSize,
                        minClusterSize,
                        tipo,
-                       fileName){
+                       fileName,
+                       useLog){
+  
   #Create folder for figures
   dirFigFake<-paste0(dirFig,"fake/")
   if (!dir.exists(dirFig)){
@@ -1010,7 +1061,7 @@ processaPar = function(dirBase,
   allAmostras<-allAmostras[!allAmostras$symbol == '-',]
   genes <- unique(allAmostras$symbol)
   genes<-genes[order(genes)]
-  #genes<-genes[which(genes == "MIS18A"):length(genes)]
+  #genes<-genes[1:5]
   #genes="BRDT"#
   
   library(doParallel)
@@ -1021,7 +1072,7 @@ processaPar = function(dirBase,
   cat(paste("Starting the parallel processing for ", tipo,"\n"),file=arqLog,append = T)
   system(paste0('tail -f ',arqLog), wait=F)
   # foreach ----
-  foreach(geneIdx = seq(1,length(genes)),
+  bimodalGenes<-foreach(geneIdx = seq(1,length(genes)),
           .combine=rbind,
           .export = c("genes",
                       "arqLog",
@@ -1037,6 +1088,7 @@ processaPar = function(dirBase,
                       "dirDados",
                       "limiarDw",
                       "limiarUp",
+                      "useLog",
                       #functions
                       "achaPico",
                       "processaPicos",
@@ -1055,9 +1107,6 @@ processaPar = function(dirBase,
                         amostras <- na.omit(allAmostras[allAmostras$symbol == gene,
                                                         c("sample","symbol","FPKM")])
                         colnames(amostras)<-c("V1","V2","V3")
-                        if(useLog){
-                          amostras$V3<-log2(amostras$V3)
-                        }
                         if(nrow(amostras) == 0){
                           writeLines(paste("Error processing ",gene,": no expressions values found."))
                           cat(paste("Error processing",gene,":  no expressions values found.","\n"),file=arqLog,append = T)
@@ -1083,6 +1132,13 @@ processaPar = function(dirBase,
                           writeLines(paste("Not enough data - just ", nrow(amostras), " samples for ", gene))
                           cat(paste("Not enough data - just ", nrow(amostras), " samples for ", gene,"\n"),file=arqLog,append = T)
                           return()
+                        }
+                        if(useLog == "log2"){
+                          amostras$V3<-log2(amostras$V3)
+                        }else if(useLog == "log10"){
+                          amostras$V3<-log10(amostras$V3)
+                        }else if(useLog != "none"){
+                          warning("Invalid option for useLog. Proceeding with default expression values...")
                         }
                         pPicos<-processaPicos(amostras,arqLog,gene)
                         densidade<-pPicos[[1]]
@@ -1144,6 +1200,12 @@ processaPar = function(dirBase,
                           densidade2<-pPicos2[[1]]
                           qtdPicos2<-pPicos2[[2]]
                           coordPicos<-pPicos2[[7]]
+                          if (qtdPicos2 == 0){
+                            writeLines(paste("Second pass fail ",gene))
+                            cat(paste("Second pass fail ",gene,"\n"),file=arqLog,append = T)
+                            return()
+                          }
+                          
                           #graph 3 ----
                           g[[3]]<-graph3(densidade2 = densidade2,
                                          qtdPicos = qtdPicos2,
@@ -1188,6 +1250,7 @@ processaPar = function(dirBase,
                           
                           lista <- rbind(lista,dfTmp)
                           
+                          
                           cat(c("*******************************************************\n",
                                 paste("Bimodality for ", gene,"\n"),
                                 "*******************************************************\n"),
@@ -1196,6 +1259,7 @@ processaPar = function(dirBase,
                                        paste("Bimodality for ", gene),
                                        "*******************************************************"))
                           
+                          return(gene)
                         }
                         
                         
@@ -1205,12 +1269,44 @@ processaPar = function(dirBase,
   
   stopCluster(cl)
   #dev.off()
+    sumario<-paste0(dirBase,"samples/",tipo,"Summary.txt")
   
-  colnames(lista)<-c("Nr","Gene")
-  colnames(erros)<-c("Arquivo")
+  bimodais<-length(bimodalGenes)
+  nGenes<-length(genes)
+  border="*****************************************\n"
   
-  #write.csv(lista,paste0(dirFig,"lista.csv"),row.names = F)
-  #write.csv(erros,paste0(dirFig,"erros.csv"),row.names = F)
-  #close(arqLog)
+  if(useLog == "log2"){
+    text1<-"Using expression values with Log2\n"
+  }else if(useLog == "log10"){
+    text1<-"Using expression values with Log10\n"
+  }else{
+    text1<-"Using expression values without transformation\n"
+  }
+  
+  cat(paste0(border,"Summary for ", tipo,"\n",border, text1,"\n"),
+      file=  sumario,
+      append = T)
+
+  cat(paste0("- ", bimodais, " bimodal genes in ", nGenes," genes\n\n- ",
+            round(bimodais/nGenes*100,2),"% of genes were bimodal \n\n",
+            "Bimodal Genes:\n"),
+      file=  sumario,
+      append = T)
+  for(i in 1:length(bimodalGenes)){
+    cat(paste(bimodalGenes[i],"\n"),
+        file=  sumario,
+        append = T)
+  }
+
+  cat(paste0("\nParameters: \n", 
+             "minExpression = ", minExpression, 
+             "\nminSampleSize =", minSampleSize,
+             "\nminClusterSize = ",minClusterSize,
+             "\nthreshold Up = ", limiarUp, 
+             "\nthreshold Down = ",limiarDw,
+             "\natenuation = ",atenuacao,
+             "\n\n"),
+      file=  sumario,
+      append = T)
   
 }
