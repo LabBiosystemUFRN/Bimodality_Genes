@@ -12,7 +12,7 @@ library(stringr)
 library(clipr)
 
 ##########################################################
-###   BRCA DATABASE ORGANIZATION AND FILTERING  ####
+###   BLCA DATABASE ORGANIZATION AND FILTERING  ####
 ##########################################################
 setwd("E:/ArtigoJosivan/samples/blcaNon")
 
