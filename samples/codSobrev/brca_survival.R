@@ -1,8 +1,5 @@
 #######################################################################
-#################### ANALISE DE SOBREVIDA #############################
-#######################################################################
-######## Aqui selecionar as melhores amostras manualmente #############
-# Aplica o Intervalo de Confiança para classificar melhor as amostras #
+#################### SURVIVAL ANALYSIS #############################
 #######################################################################
 
 library(data.table)
@@ -15,14 +12,13 @@ library(stringr)
 library(clipr)
 
 ##########################################################
-###   ORGANIZACÃO E FILTRAGEM DA BASE DE DADOS  BRCA  ####
+###   BRCA DATABASE ORGANIZATION AND FILTERING  ####
 ##########################################################
 ##########################################################
 setwd("E:/ArtigoJosivan/samples/brcaNon")
 
-## Cria uma planilha com dados dos genes por pico
+## Creates a spreadsheet with gene data per peak
 
-# lista todos os arquivos
 files1.1 <- list.files(pattern = "*_0.02_peak1_cluster1.lst")
 files1.2 <- list.files(pattern = "*_0.02_peak1_cluster2.lst")
 files1.3 <- list.files(pattern = "*_0.02_peak1_cluster3.lst")
@@ -38,31 +34,30 @@ files2 <- c(files2.1,files2.2,files2.3)
 
 
 
-lista1 <- data.frame() # cria um data.frame vazio
-for(i in files1) # para ir do 1° até o ultimo da lista
+lista1 <- data.frame() 
+for(i in files1) 
 {
-  temp <- fread(i, header = F)# ler cada arq. em um arq. temporario
-  #separa o nome do arquivo strsplit("-") e guarda o 1° para cada i 
-  #  temp$gene <- strsplit(i, split = "*_0.02_1.lst")[[1]][1]
+  temp <- fread(i, header = F)
   temp$gene <- str_sub(i, end = -25)
   temp$pico <- "P1"
   temp$tumor <- "brca"
   lista1 <- rbind(lista1, temp) # sobrepoe os arq. temp data.frame lista
 }
 
-#  Faz o mesmo para lista 2
+#  Do the same for list 2
+
 lista2 <- data.frame()
 for(i in files2)
 {
   temp <- fread(i, header = F)
-  #temp$gene <- strsplit(i, split = "*_0.02_2.lst")[[1]][1]
   temp$gene <- str_sub(i, end = -25)
   temp$pico <- "P2"
   temp$tumor <- "brca"
   lista2 <- rbind(lista2, temp)
 }
 
-### Organiza os dados para o merge com data clinical
+### Organizes data for the merge with data clinical
+
 dados <- rbind(lista1, lista2)
 colnames(dados) <- c("CASE_ID","Gene","Pico","Tumor")
 #dados$CASE_ID <- str_sub(dados$CASE_ID, end = 12)
@@ -70,7 +65,8 @@ dados$CASE_ID <- gsub("\\.", "\\-", dados$CASE_ID)
 head(dados)
 
 
-##### Dados clinicos TCGA - cbioportal
+##### TCGA clinical data - cbioportal
+
 clinical <- read.csv("brca_clinical_patient.txt", sep = '\t', header = F, stringsAsFactors = F)
 clinical <- clinical[-c(1:4),]
 colnames(clinical) <- clinical[1,]
@@ -79,7 +75,6 @@ clinical <- clinical %>% dplyr::select("PATIENT_ID","OS_STATUS","OS_MONTHS")
 setnames(clinical,c("CASE_ID","OS_STATUS","OS_MONTHS"))
 clinical$OS_MONTHS <- as.numeric(as.character(clinical$OS_MONTHS))
 
-#clinical$OS_STATUS <- as.factor(clinical$OS_STATUS)
 clinical <- clinical[(complete.cases(clinical)),]
 
 # https://stat.ethz.ch/R-manual/R-devel/library/survival/html/Surv.html
@@ -88,7 +83,7 @@ head(clinical)
 
 
 
-### Funcion Sobrevida
+### Function Survival
 
 ggsurv <- function(s, CI = 'def', plot.cens = T, surv.col =  'gg.def',
                    cens.col = 'red', lty.est = 1, lty.ci = 2,
@@ -257,9 +252,11 @@ ggsurv <- function(s, CI = 'def', plot.cens = T, surv.col =  'gg.def',
 }
 
 
+
 setwd("E:/ArtigoJosivan/survival/brcaNon")
-#for(tumor in unique(dados$Tumor)[1:3]){
-#  print(paste0("tumor: ", tumor))
+
+# Function to generate graphs and summary of survival tests
+
 tumor="brca"
 aux = dados[dados$Tumor == "brca",]
 for(gene in unique(aux$Gene)){
