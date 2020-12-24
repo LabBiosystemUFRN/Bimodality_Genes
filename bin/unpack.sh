@@ -4,8 +4,8 @@
 
 cd $1"/data/parts"
 
-cat KIRC_FPKM_TP.tsv.tar.bz.part.aa KIRC_FPKM_TP.tsv.tar.bz.part.ab > KIRC_FPKM_TP.tsv.tar.bz
+cat KIRC_FPKM_TP.tsv.tar.bz.part.* > KIRC_FPKM_TP.tsv.tar.bz
 
-tar -xjvf KIRC_FPKM_TP.tsv.tar.bz -C ../
+tar -xvf KIRC_FPKM_TP.tsv.tar.bz -C ../
 
 
