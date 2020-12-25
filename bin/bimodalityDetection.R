@@ -62,7 +62,7 @@ useLog = "none"
 #Sample identification
 #You can use more than one sample if necessary
 #It will be processed in the appearance order
-vtipo<-c("KIRKNew")
+vtipo<-c("KIRC")
 
 #Sample file name
 #Must be in the same order above
