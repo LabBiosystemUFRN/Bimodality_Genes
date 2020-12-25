@@ -12,6 +12,7 @@ The original data is splited in two files, placed inside **_data/parts_** folder
 
 The script unpack.sh reassemble and extract the data. 
 
+To process the other types of tumor in the data folder, change the name of the tumor in the files: bimodalityDetection.R (vtipo and vfileName) and unpack.sh in the bin folder.
 
 If your need to process another dataset without compaction, first comment the line
 
